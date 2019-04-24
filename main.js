@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const get = require('lodash/get')
 const set = require('lodash/set')
 const table = require('cli-table2')
