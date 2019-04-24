@@ -1,13 +1,21 @@
 {
-    "name": "json-cli",
-    "version": "1.0.4",
-    "main": "index.js",
+    "name": "simple-json-cli",
+    "version": "1.0.6",
+    "main": "main.js",
     "license": "MIT",
-    "scripts.test": "echo \"Error: no test specified\" && exit 1",
+    "scripts": {
+        "start": "node ./main.js"
+    },
     "author": "",
     "description": "A simple json modified cli tool",
-    "bin": "./main.js",
-    "keywords": ["json", "json-cli", "cli"],
+    "bin": {
+        "simple-json-cli": "./main.js"
+    },
+    "keywords": [
+        "json",
+        "json-cli",
+        "cli"
+    ],
     "devDependencies": {
         "@types/node": "^11.13.7"
     },
