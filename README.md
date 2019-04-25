@@ -1,5 +1,11 @@
 # Simple JSON Cli
 
+### To install
+
+```
+$ npm i -g simple-json-cli
+```
+
 ```
   Usage
     $ simple-json-cli <input-file>

@@ -60,22 +60,33 @@ async function main () {
         name: 'path',
         message: 'The object you want to modified',
         async source (answer, input = '') {
-          return fuzzy.filter(input, autoCompleteList).map(ele => ele.original)
+          return fuzzy.filter(input, autoCompleteList).map(ele => ele.original).concat([input])
         }
       }
     ])
-    console.log(`
-      From ${path} get the message as below:
-  
-      ${get(list, path)}
-    `)
+    let obj = get(list, path)
+    if (obj) {
+      console.log(`
+  From ${path} get the message as below:
+    ${get(list, path)}
+      `)
+    } else {
+      const { create } = await inquirer.prompt({
+        type: 'confirm',
+        name: 'create',
+        message: 'Didn\'t find the matching object on this path, create a new one?',
+        default: true
+      })
+      if(!create) continue
+      set(list, path, null)
+    }
     const { value } = await inquirer.prompt([
       {
         type: 'input',
         name: 'value',
         message: 'Modified to: ',
         default () {
-          return get(list, path)
+          return get(list, path) || 'null'
         }
       }
     ])
