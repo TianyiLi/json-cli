@@ -37,7 +37,7 @@ async function main () {
     $ i18n-shell ./test.json -w ./test2.json
   `, {
       flags: {
-        writeFiles: {
+        writeFile: {
           type: 'string',
           alias: 'w',
           default: false
@@ -48,7 +48,9 @@ async function main () {
     console.error(`Input file is not correct.`)
     process.exit(1)
   }
+  const outputFiles = cli.flags.w || cli.flags.writeFile || cli.input[0]
   const file = fs.readFileSync(cli.input[0], { encoding: 'utf8' })
+  
   JSON_Object = JSON5.parse(file)
   const list = getPairs(JSON_Object)
   const autoCompleteList = Object.entries(list).map(ele => ele[0])
@@ -118,7 +120,7 @@ async function main () {
     })
     looping = repeat
   } while (looping)
-  fs.writeFileSync(cli.input[0], JSON.stringify(JSON_Object, null, 4), { encoding: 'utf8' })
+  fs.writeFileSync(outputFiles, JSON.stringify(JSON_Object, null, 4), { encoding: 'utf8' })
   console.log(`Generate Done`)
 }
 
