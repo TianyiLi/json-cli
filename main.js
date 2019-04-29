@@ -8,6 +8,7 @@ const inquirer = require('inquirer')
 const JSON5 = require('json5')
 const fuzzy = require('fuzzy')
 let JSON_Object = {}
+let noChange = true
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
 
 function getPairs (child = {}, parents = '') {
@@ -62,7 +63,12 @@ async function main () {
         name: 'path',
         message: 'The object you want to modified',
         async source (answer, input = '') {
-          return fuzzy.filter(input, autoCompleteList).map(ele => ele.original).concat([input])
+          let result = fuzzy.filter(input, autoCompleteList).map(ele => ele.original)
+          if (!~result.indexOf(input)) {
+            return result.concat([input])
+          } else {
+            return result
+          }
         }
       }
     ])
@@ -111,6 +117,7 @@ async function main () {
       set(JSON_Object, path, value)
       list[path] = value
       console.log(`The value is changed`)
+      noChange = false
     }
     const { repeat } = await inquirer.prompt({
       type: 'confirm',
@@ -120,8 +127,12 @@ async function main () {
     })
     looping = repeat
   } while (looping)
-  fs.writeFileSync(outputFiles, JSON.stringify(JSON_Object, null, 4), { encoding: 'utf8' })
-  console.log(`Generate Done`)
+  if (!noChange) {
+    fs.writeFileSync(outputFiles, JSON.stringify(JSON_Object, null, 4), { encoding: 'utf8' })
+    console.log(`Generate Done`)
+  } else {
+    console.log('File No Change')
+  }
 }
 
 main()
