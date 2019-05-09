@@ -7,6 +7,7 @@ const fs = require('fs')
 const inquirer = require('inquirer')
 const JSON5 = require('json5')
 const fuzzy = require('fuzzy')
+
 let JSON_Object = {}
 let noChange = true
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
@@ -51,12 +52,13 @@ async function main () {
   }
   const outputFiles = cli.flags.w || cli.flags.writeFile || cli.input[0]
   const file = fs.readFileSync(cli.input[0], { encoding: 'utf8' })
-  
+
   JSON_Object = JSON5.parse(file)
   const list = getPairs(JSON_Object)
   const autoCompleteList = Object.entries(list).map(ele => ele[0])
   let looping = true
   do {
+    /** @type {{path: string}} */
     const { path } = await inquirer.prompt([
       {
         type: 'autocomplete',
@@ -73,6 +75,7 @@ async function main () {
       }
     ])
     let obj = get(list, path)
+    const typeOfObject = typeof obj
     if (obj) {
       console.log(`
   From ${path} get the message as below:
@@ -85,10 +88,10 @@ async function main () {
         message: 'Didn\'t find the matching object on this path, create a new one?',
         default: true
       })
-      if(!create) continue
+      if (!create) continue
       set(list, path, null)
     }
-    const { value } = await inquirer.prompt([
+    let { value } = await inquirer.prompt([
       {
         type: 'input',
         name: 'value',
@@ -114,9 +117,42 @@ async function main () {
       }
     ])
     if (change) {
-      set(JSON_Object, path, value)
-      list[path] = value
-      console.log(`The value is changed`)
+      switch (typeOfObject) {
+        case 'boolean':
+          value = !~['true', 'false'].indexOf(value) ? value === 'true' : value;
+          break
+        case 'number':
+          value = /\d+/.test(value) ? +value : value
+          break
+      }
+      if (value === 'undefined') {
+        const { confirmToUndefined } = await inquirer.prompt({
+          type: 'confirm',
+          name: 'confirmToUndefined',
+          default: true,
+          message: 'Value is set to undefined, you want to delete it?'
+        })
+        if (confirmToUndefined) {
+          let params = path.match(/(.*)(\.\w+|\[\d+\])$/)
+          if (params === null) {
+            delete JSON_Object[path]
+          } else {
+            const obj = get(JSON_Object, params[1])
+            if (Array.isArray(obj)) {
+              let index = +(params[2].substring(1, params[2].length - 1))
+              obj.splice(index, 1)
+            } else {
+              delete obj[params[2].substr(1)]
+            }
+          }
+        } else {
+          set(JSON_Object, path, value)
+        }
+      }else {
+        set(JSON_Object, path, value)
+        list[path] = value
+        console.log(`The value is changed`)
+      }
       noChange = false
     }
     const { repeat } = await inquirer.prompt({
